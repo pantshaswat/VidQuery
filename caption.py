@@ -1,36 +1,55 @@
-# whisper_caption_extractor.py
+# store_caption_embeddings.py
 
-import os
-import whisper
-import ffmpeg
+import uuid
+from sentence_transformers import SentenceTransformer
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams, PointStruct
 
-def extract_audio(video_path, audio_path="temp_audio.wav"):
-    """Extracts audio from the video using ffmpeg"""
-    ffmpeg.input(video_path).output(audio_path, ac=1, ar='16k').run(overwrite_output=True)
-    return audio_path
+COLLECTION_NAME = "caption-embeddings"
+CAPTION_FILE = "captions.txt"
 
-def transcribe_with_whisper(audio_path):
-    """Runs Whisper on the extracted audio"""
-    model = whisper.load_model("base")  # You can change to "small", "medium", "large" if needed
-    result = model.transcribe(audio_path)
-    return result["segments"]  # list of dicts with 'start', 'end', 'text'
+# Load BERT model
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
-def save_captions(segments, output_file="captions.txt"):
-    """Saves the transcribed segments to a file"""
-    with open(output_file, "w", encoding="utf-8") as f:
-        for seg in segments:
-            start = round(seg['start'], 2)
-            end = round(seg['end'], 2)
-            text = seg['text'].strip()
-            f.write(f"[{start}s - {end}s] {text}\n")
-    print(f"Saved captions to {output_file}")
+# Connect to Qdrant
+qdrant = QdrantClient("localhost", port=6333)
 
-def process_video_for_captions(video_path, output_file="captions.txt"):
-    audio_path = extract_audio(video_path)
-    segments = transcribe_with_whisper(audio_path)
-    save_captions(segments, output_file)
-    os.remove(audio_path)  # clean up temp audio
+# Create Qdrant collection if it doesn't exist
+def setup_qdrant():
+    collections = qdrant.get_collections().collections
+    if COLLECTION_NAME not in [c.name for c in collections]:
+        qdrant.recreate_collection(
+            collection_name=COLLECTION_NAME,
+            vectors_config=VectorParams(size=384, distance=Distance.COSINE),
+        )
+
+# Parse captions file
+def load_captions():
+    captions = []
+    with open(CAPTION_FILE, "r", encoding="utf-8") as f:
+        for line in f:
+            try:
+                timestamp_part, text = line.split("]", 1)
+                timestamp = float(timestamp_part.strip("[").split("-")[0].replace("s", "").strip())
+                captions.append((timestamp, text.strip()))
+            except Exception as e:
+                print(f"Skipping line due to error: {e}")
+    return captions
+
+# Generate and upload embeddings
+def upload_caption_embeddings():
+    captions = load_captions()
+    texts = [text for _, text in captions]
+    embeddings = model.encode(texts, convert_to_numpy=True)
+
+    points = [
+        PointStruct(id=str(uuid.uuid4()), vector=embedding.tolist(), payload={"timestamp": timestamp, "caption": text})
+        for (timestamp, text), embedding in zip(captions, embeddings)
+    ]
+
+    qdrant.upsert(collection_name=COLLECTION_NAME, points=points)
+    print(f"Uploaded {len(points)} caption embeddings to Qdrant.")
 
 if __name__ == "__main__":
-    video_path = "Video/Dessert.mp4"  # Replace with your video path
-    process_video_for_captions(video_path)
+    setup_qdrant()
+    upload_caption_embeddings()
