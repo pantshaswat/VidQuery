@@ -28,7 +28,7 @@ blip_model.eval()
 sentence_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Connect to Qdrant
-qdrant = QdrantClient("localhost", port=6333)
+qdrant = QdrantClient("localhost", port=6333, prefer_grpc=False, check_compatibility=False)
 
 def setup_qdrant_for_video(video_id: str):
     """Setup Qdrant collections for a specific video"""

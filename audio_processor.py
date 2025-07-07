@@ -13,7 +13,7 @@ from video_utils import get_video_id, get_collection_names
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Connect to Qdrant
-qdrant = QdrantClient("localhost", port=6333)
+qdrant = QdrantClient("localhost", port=6333, prefer_grpc=False, check_compatibility=False)
 
 def setup_qdrant_for_audio(video_id: str):
     """Create Qdrant collection for audio if it doesn't exist"""

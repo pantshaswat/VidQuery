@@ -15,7 +15,7 @@ clip_model, clip_preprocess = clip.load("ViT-B/32", device=device)
 sentence_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Connect to Qdrant
-qdrant = QdrantClient("localhost", port=6333)
+qdrant = QdrantClient("localhost", port=6333, prefer_grpc=False, check_compatibility=False)
 
 def get_available_videos() -> List[str]:
     """Get list of available video IDs from collection names"""

@@ -1,0 +1,22 @@
+{
+  "9e9aa6c1-1f44-4482-88af-1fcbd0864804": {
+    "video_id": "9e9aa6c1-1f44-4482-88af-1fcbd0864804",
+    "filename": "9e9aa6c1-1f44-4482-88af-1fcbd0864804.mp4",
+    "original_name": "Coffee.mp4",
+    "file_path": "uploads/9e9aa6c1-1f44-4482-88af-1fcbd0864804.mp4",
+    "upload_date": "2025-07-07T23:43:44.816386",
+    "file_size": 6466582,
+    "duration": 115.181,
+    "status": "completed"
+  },
+  "7d532568-6c7c-4657-9e84-0fa5df69e0a8": {
+    "video_id": "7d532568-6c7c-4657-9e84-0fa5df69e0a8",
+    "filename": "7d532568-6c7c-4657-9e84-0fa5df69e0a8.mp4",
+    "original_name": "Dessert.mp4",
+    "file_path": "uploads/7d532568-6c7c-4657-9e84-0fa5df69e0a8.mp4",
+    "upload_date": "2025-07-07T23:50:04.841867",
+    "file_size": 1230573,
+    "duration": 16.384,
+    "status": "completed"
+  }
+}
